@@ -1,0 +1,8 @@
+<div class="toast-wrapper position-fixed top-0 end-0 p-3" style="z-index:1200;">
+  <div class="toast-item mb-2" *ngFor="let m of toast.messages$ | async; trackBy: trackById">
+    <div class="alert alert-{{m.type}} alert-dismissible fade show shadow-sm py-2 px-3">
+      <small>{{m.text}}</small>
+      <button type="button" class="btn-close btn-sm" (click)="toast.dismiss(m.id)"></button>
+    </div>
+  </div>
+</div>

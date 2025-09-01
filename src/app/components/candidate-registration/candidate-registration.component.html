@@ -1,0 +1,35 @@
+<div class="container py-4 registration-wrapper">
+  <h4 class="mb-3">Candidate Registration</h4>
+  <form (ngSubmit)="save()" #f="ngForm" class="card p-4 shadow-sm">
+    <div class="row g-3">
+      <div class="col-md-6">
+        <label class="form-label">Full Name</label>
+        <input class="form-control" name="name" [(ngModel)]="model.name" required>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Email</label>
+        <input class="form-control" name="email" type="email" [(ngModel)]="model.email" required>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Phone</label>
+        <input class="form-control" name="phone" [(ngModel)]="model.phone">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Position</label>
+        <input class="form-control" name="position" [(ngModel)]="model.position" required>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Experience (Years)</label>
+        <input class="form-control" type="number" name="experience" [(ngModel)]="model.experience">
+      </div>
+      <div class="col-md-8">
+        <label class="form-label">Resume URL</label>
+        <input class="form-control" name="resumeUrl" [(ngModel)]="model.resumeUrl" placeholder="https://...">
+      </div>
+    </div>
+    <div class="mt-4 d-flex gap-2">
+      <button class="btn btn-success" [disabled]="f.invalid">Save Candidate</button>
+      <button class="btn btn-outline-secondary" type="reset" (click)="model={}">Reset</button>
+    </div>
+  </form>
+</div>

@@ -1,0 +1,8 @@
+<div class="container py-4 dashboard-wrapper">
+  <h4 class="mb-3">HR Dashboard</h4>
+  <div class="row g-3">
+    <div class="col-md-3" *ngFor="let metric of ['Candidates','Scheduled','Completed','Pass Rate']">
+      <div class="card p-3 shadow-sm small-metric"><span class="text-muted">{{metric}}</span><h5 class="mb-0 mt-1 fw-semibold">--</h5></div>
+    </div>
+  </div>
+</div>

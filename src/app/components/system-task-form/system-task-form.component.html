@@ -1,0 +1,41 @@
+<div class="container py-4 system-task-wrapper">
+  <h4 class="mb-3">System Task Feedback</h4>
+  <form (ngSubmit)="save()" #f="ngForm" class="card p-4 shadow-sm">
+    <div class="row g-3">
+      <div class="col-md-4">
+        <label class="form-label">Task Type</label>
+        <select class="form-select" name="taskType" [(ngModel)]="model.taskType" required>
+          <option value="coding">Coding</option>
+          <option value="case-study">Case Study</option>
+          <option value="design">Design</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Completion Time (min)</label>
+        <input type="number" class="form-control" name="completionTime" [(ngModel)]="model.completionTime" required>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Code Quality (1-5)</label>
+        <input type="number" min="1" max="5" class="form-control" name="codeQuality" [(ngModel)]="model.codeQuality">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Problem Solving (1-5)</label>
+        <input type="number" min="1" max="5" class="form-control" name="problemSolvingAbility" [(ngModel)]="model.problemSolvingAbility" required>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Creativity (1-5)</label>
+        <input type="number" min="1" max="5" class="form-control" name="creativity" [(ngModel)]="model.creativity" required>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Test Cases Passed</label>
+        <input type="number" class="form-control" name="testCases" [(ngModel)]="model.testCases">
+      </div>
+      <div class="col-12">
+        <label class="form-label">Task Description / Notes</label>
+        <textarea class="form-control" rows="3" name="taskDescription" [(ngModel)]="model.taskDescription"></textarea>
+      </div>
+    </div>
+    <div class="mt-4"><button class="btn btn-primary" [disabled]="f.invalid">Save System Task Evaluation</button></div>
+  </form>
+</div>

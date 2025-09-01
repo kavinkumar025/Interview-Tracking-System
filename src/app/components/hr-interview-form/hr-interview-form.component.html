@@ -1,0 +1,35 @@
+<div class="container py-4 hr-form-wrapper">
+  <h4 class="mb-3">HR Interview Feedback</h4>
+  <form (ngSubmit)="save()" #f="ngForm" class="card p-4 shadow-sm">
+    <div class="row g-3">
+      <div class="col-md-3" *ngFor="let field of [
+        {key:'cultureFit', label:'Culture Fit'},
+        {key:'communicationSkills', label:'Communication'},
+        {key:'motivation', label:'Motivation'}]">
+        <label class="form-label">{{field.label}} (1-5)</label>
+        <input type="number" min="1" max="5" class="form-control" name="{{field.key}}" [(ngModel)]="model[field.key]" required>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Salary Expectation</label>
+        <input class="form-control" type="number" name="salaryExpectation" [(ngModel)]="model.salaryExpectation">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Negotiated Salary</label>
+        <input class="form-control" type="number" name="negotiatedSalary" [(ngModel)]="model.negotiatedSalary">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Availability To Join</label>
+        <input class="form-control" name="availabilityToJoin" [(ngModel)]="model.availabilityToJoin" placeholder="e.g. 30 days">
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Career Aspiration</label>
+        <textarea rows="2" class="form-control" name="careerAspiration" [(ngModel)]="model.careerAspiration"></textarea>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Comments</label>
+        <textarea rows="2" class="form-control" name="comments" [(ngModel)]="model.comments"></textarea>
+      </div>
+    </div>
+    <div class="mt-4"><button class="btn btn-primary" [disabled]="f.invalid">Save HR Evaluation</button></div>
+  </form>
+</div>

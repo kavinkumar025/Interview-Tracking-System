@@ -1,0 +1,30 @@
+<div class="container py-4 technical-form-wrapper">
+  <h4 class="mb-3">Technical Interview Feedback</h4>
+  <form (ngSubmit)="save()" #f="ngForm" class="card p-4 shadow-sm">
+    <div class="row g-3">
+      <div class="col-md-4" *ngFor="let field of [
+        {key:'technicalSkills', label:'Technical Skills'},
+        {key:'problemSolvingAbility', label:'Problem Solving'},
+        {key:'codingSkills', label:'Coding Skills'},
+        {key:'systemDesignSkills', label:'System Design'},
+        {key:'architecturalKnowledge', label:'Architecture'},
+        {key:'communicationDuringTechnical', label:'Communication'}]">
+        <label class="form-label">{{field.label}} (1-5)</label>
+        <input type="number" min="1" max="5" class="form-control" name="{{field.key}}" [(ngModel)]="model[field.key]" required>
+      </div>
+      <div class="col-12">
+        <label class="form-label">Questions Asked</label>
+        <textarea class="form-control" rows="2" name="questions" [(ngModel)]="model.questions"></textarea>
+      </div>
+      <div class="col-12">
+        <label class="form-label">Solutions / Observations</label>
+        <textarea class="form-control" rows="3" name="solutions" [(ngModel)]="model.solutions"></textarea>
+      </div>
+      <div class="col-12">
+        <label class="form-label">Areas to Improve</label>
+        <textarea class="form-control" rows="2" name="improve" [(ngModel)]="model.improve"></textarea>
+      </div>
+    </div>
+    <div class="mt-4"><button class="btn btn-primary" [disabled]="f.invalid">Save Technical Evaluation</button></div>
+  </form>
+</div>

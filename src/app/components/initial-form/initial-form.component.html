@@ -1,0 +1,38 @@
+<div class="container py-4 initial-form-wrapper">
+  <h4 class="mb-3">Initial Interview Checklist</h4>
+  <form (ngSubmit)="save()" #f="ngForm" class="card p-4 shadow-sm">
+    <div class="row g-3">
+      <div class="col-md-4">
+        <label class="form-label">Eligibility Check</label>
+        <select class="form-select" name="eligibilityCheck" [(ngModel)]="model.eligibilityCheck" required>
+          <option [ngValue]="true">Yes</option>
+          <option [ngValue]="false">No</option>
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Resume Quality (1-5)</label>
+        <input type="number" min="1" max="5" class="form-control" name="resumeQuality" [(ngModel)]="model.resumeQuality" required>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Experience Match (1-5)</label>
+        <input type="number" min="1" max="5" class="form-control" name="experienceMatch" [(ngModel)]="model.experienceMatch" required>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Education Match (1-5)</label>
+        <input type="number" min="1" max="5" class="form-control" name="educationMatch" [(ngModel)]="model.educationMatch" required>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Documentation Complete</label>
+        <select class="form-select" name="documentationComplete" [(ngModel)]="model.documentationComplete" required>
+          <option [ngValue]="true">Yes</option>
+          <option [ngValue]="false">No</option>
+        </select>
+      </div>
+      <div class="col-12">
+        <label class="form-label">Comments</label>
+        <textarea class="form-control" rows="3" name="comments" [(ngModel)]="model.comments"></textarea>
+      </div>
+    </div>
+    <div class="mt-4"><button class="btn btn-primary" [disabled]="f.invalid">Save Initial Evaluation</button></div>
+  </form>
+</div>
