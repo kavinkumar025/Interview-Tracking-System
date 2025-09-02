@@ -19,7 +19,7 @@ export class ConsolidatedReportComponent implements OnInit {
   InterviewStage = InterviewStage;
   constructor(private route: ActivatedRoute, private fs: FirebaseService){}
   async ngOnInit(){
-    this.candidateId = this.route.snapshot.paramMap.get('candidateId')||'';
+    this.candidateId = this.route.snapshot.paramMap.get('id')||'';
     if(this.candidateId) await this.load(); else this.error='Candidate id missing';
   }
   async load(){
