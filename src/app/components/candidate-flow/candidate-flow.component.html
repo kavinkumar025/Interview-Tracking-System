@@ -1,0 +1,42 @@
+<div class="candidate-flow">
+  <div *ngIf="loading" class="text-center py-3"><div class="spinner-border spinner-border-sm"></div></div>
+  <div *ngIf="error" class="alert alert-danger py-1 small">{{error}}</div>
+  <ng-container *ngIf="!loading && !error">
+    <div *ngIf="candidate?.status === 'rejected'; else stagesView" class="alert alert-outline-danger border border-danger rounded small">
+      <div class="d-flex align-items-start gap-2">
+        <i class="bi bi-x-octagon-fill text-danger fs-5"></i>
+        <div>
+          <div class="fw-semibold text-danger">Candidate Rejected</div>
+          <div *ngIf="rejection" class="mt-1">
+            <span class="badge bg-danger-subtle text-danger border border-danger me-2">Stage: {{rejection.stage}}</span>
+            <span class="badge bg-secondary-subtle text-dark border">By: {{rejection.rejectedByName}}</span>
+            <div class="mt-2"><strong>Reason:</strong> {{rejection.reason}}</div>
+            <div class="text-muted mt-1" style="font-size:.75rem">{{rejection.rejectedAt | date:'medium'}}</div>
+          </div>
+          <div *ngIf="!rejection" class="text-muted">Rejection recorded but details unavailable.</div>
+        </div>
+      </div>
+    </div>
+    <ng-template #stagesView>
+      <div class="flow-container">
+        <div *ngFor="let st of stages; let i = index" class="flow-stage" [ngClass]="status(st)">
+          <div class="stage-circle">
+            <span class="abbr">{{i+1}}</span>
+          </div>
+            <div class="stage-body">
+            <div class="stage-name text-capitalize">{{st.replace('-',' ')}}</div>
+            <div class="stage-status small" [ngClass]="status(st)">{{status(st)}}</div>
+            <ng-container *ngIf="evalFor(st) as ev">
+              <div class="small mt-1 text-muted" *ngIf="ev.interviewerName">{{ev.interviewerName}}</div>
+              <div class="rating" *ngIf="ev.isCompleted">Rating: {{ev.overallRating}}</div>
+            </ng-container>
+            <div class="mt-1">
+              <button type="button" class="btn btn-outline-danger btn-xs btn-sm py-0 px-1" (click)="reject(st)">Reject</button>
+            </div>
+          </div>
+          <div class="connector" *ngIf="i < stages.length-1"></div>
+        </div>
+      </div>
+    </ng-template>
+  </ng-container>
+</div>

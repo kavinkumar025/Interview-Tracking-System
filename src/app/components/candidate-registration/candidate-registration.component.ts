@@ -16,9 +16,9 @@ export class CandidateRegistrationComponent {
   saving=false; saved=false; error='';
   constructor(private fb: FormBuilder, private fs: FirebaseService) {
     this.form = this.fb.group({
-      name: ['', Validators.required],
+      name: ['', [Validators.required, Validators.minLength(2)]],
       email: ['', [Validators.required, Validators.email]],
-      phone: [''],
+      phone: ['', [Validators.required, Validators.pattern(/^[0-9()+\-\s]{7,20}$/)]],
       position: ['', Validators.required],
       experience: [0, [Validators.min(0)]],
       resumeUrl: ['']
@@ -30,10 +30,11 @@ export class CandidateRegistrationComponent {
     this.saving=true;
     try {
       const value = this.form.value;
+      const email = (value.email||'').trim().toLowerCase();
       await this.fs.createCandidate({
         name: value.name!,
-        email: value.email!,
-        phone: value.phone||'',
+        email,
+        phone: (value.phone||'').trim(),
         position: value.position!,
         experience: value.experience||0,
         resumeUrl: value.resumeUrl||'',

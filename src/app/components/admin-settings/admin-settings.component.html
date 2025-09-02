@@ -1,6 +1,191 @@
 <div class="container py-4 admin-settings-wrapper">
-  <h4 class="mb-3">Admin Settings</h4>
-  <div class="card p-3 shadow-sm">
-    <p class="text-muted mb-0">Configuration options will appear here.</p>
+  <div class="d-flex align-items-center mb-3">
+    <h4 class="mb-0 me-3">Admin Settings</h4>
+    <ul class="nav nav-pills small">
+      <li class="nav-item"><button class="nav-link" [class.active]="tab==='users'" (click)="tab='users'">Users</button></li>
+      <li class="nav-item"><button class="nav-link" [class.active]="tab==='templates'" (click)="tab='templates'">Evaluation Templates</button></li>
+      <li class="nav-item"><button class="nav-link" [class.active]="tab==='notifications'" (click)="tab='notifications'">Notifications</button></li>
+    </ul>
+  </div>
+
+  <!-- Users Tab -->
+  <div *ngIf="tab==='users'" class="card shadow-sm mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <strong>Users</strong>
+      <button class="btn btn-sm btn-outline-secondary" (click)="loadUsers()" [disabled]="loadingUsers">
+        <span *ngIf="!loadingUsers">Refresh</span>
+        <span *ngIf="loadingUsers" class="spinner-border spinner-border-sm"></span>
+      </button>
+    </div>
+    <div class="card-body p-0">
+      <div *ngIf="userError" class="alert alert-danger m-3">{{userError}}</div>
+      <div class="table-responsive" *ngIf="!userError">
+        <table class="table table-sm table-hover mb-0 align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>Name</th><th>Email</th><th>Role</th><th>Stages</th><th>Status</th><th style="width:160px">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let u of users">
+              <td>{{u.name}}</td>
+              <td class="text-muted small">{{u.email}}</td>
+              <td>
+                <select class="form-select form-select-sm" [ngModel]="u.role" (ngModelChange)="changeRole(u,$event)">
+                  <option value="admin">Admin</option>
+                  <option value="hr">HR</option>
+                  <option value="interviewer">Interviewer</option>
+                  <option value="manager">Manager</option>
+                </select>
+              </td>
+              <td class="small">{{u.canInterviewFor && u.canInterviewFor.length ? u.canInterviewFor.join(', ') : '-'}} </td>
+              <td>
+                <span class="badge" [class.bg-success]="u.isActive" [class.bg-secondary]="!u.isActive">{{u.isActive?'Active':'Inactive'}}</span>
+              </td>
+              <td>
+                <button class="btn btn-sm" [ngClass]="u.isActive?'btn-outline-warning':'btn-outline-success'" (click)="toggleActive(u)">
+                  {{u.isActive?'Disable':'Enable'}}
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="!users.length && !loadingUsers"><td colspan="6" class="text-center text-muted py-3 small">No users found.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="p-3 text-center" *ngIf="loadingUsers"><div class="spinner-border"></div></div>
+    </div>
+  </div>
+
+  <!-- Templates Tab -->
+  <div *ngIf="tab==='templates'" class="row g-3">
+    <div class="col-lg-5">
+      <div class="card shadow-sm h-100">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <strong>{{editingTemplate?'Edit Template':'New Template'}}</strong>
+          <div>
+            <button class="btn btn-sm btn-outline-secondary me-2" (click)="newTemplate()">New</button>
+            <button class="btn btn-sm btn-primary" (click)="saveTemplate()" [disabled]="savingTemplate || templateForm.invalid">
+              <span *ngIf="!savingTemplate">Save</span>
+              <span *ngIf="savingTemplate" class="spinner-border spinner-border-sm"></span>
+            </button>
+          </div>
+        </div>
+        <div class="card-body">
+          <form [formGroup]="templateForm" class="small">
+            <div class="mb-2">
+              <label class="form-label">Position</label>
+              <input type="text" class="form-control" formControlName="position" placeholder="e.g. Senior Developer">
+            </div>
+            <div class="row g-2">
+              <div class="col-6" *ngFor="let w of ['initial','systemTask','technical','manager','hr']; let i = index">
+                <label class="form-label text-capitalize">{{w}} %</label>
+                <input type="number" class="form-control form-control-sm" [formControlName]="w">
+              </div>
+            </div>
+            <hr>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <strong class="small mb-0">Custom Questions</strong>
+              <button type="button" class="btn btn-sm btn-outline-primary" (click)="addCustomQuestion()">Add</button>
+            </div>
+            <div class="border rounded p-2" *ngIf="!customQuestionsArray().length">
+              <div class="text-muted text-center small">No custom questions.</div>
+            </div>
+            <div formArrayName="customQuestions">
+              <div *ngFor="let cq of customQuestionsArray().controls; let i = index" [formGroupName]="i" class="custom-q-item mb-2 p-2 border rounded">
+                <div class="row g-1 align-items-center">
+                  <div class="col-4"><input class="form-control form-control-sm" formControlName="id" placeholder="key"></div>
+                  <div class="col-8"><input class="form-control form-control-sm" formControlName="question" placeholder="Question"></div>
+                  <div class="col-5 mt-1">
+                    <select class="form-select form-select-sm" formControlName="type">
+                      <option value="rating">Rating</option>
+                      <option value="text">Text</option>
+                      <option value="boolean">Yes/No</option>
+                      <option value="multiple-choice">Multi</option>
+                    </select>
+                  </div>
+                  <div class="col-4 mt-1">
+                    <input type="number" class="form-control form-control-sm" formControlName="weightage" placeholder="Weight">
+                  </div>
+                  <div class="col-2 mt-1 form-check">
+                    <input type="checkbox" class="form-check-input" formControlName="required" id="req{{i}}">
+                    <label class="form-check-label small" for="req{{i}}">Req</label>
+                  </div>
+                  <div class="col-1 text-end mt-1">
+                    <button type="button" class="btn btn-outline-danger btn-sm" (click)="removeCustomQuestion(i)">&times;</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-7">
+      <div class="card shadow-sm h-100 d-flex flex-column">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <strong>Templates</strong>
+          <button class="btn btn-sm btn-outline-secondary" (click)="loadTemplates()" [disabled]="loadingTemplates">
+            <span *ngIf="!loadingTemplates">Refresh</span>
+            <span *ngIf="loadingTemplates" class="spinner-border spinner-border-sm"></span>
+          </button>
+        </div>
+        <div class="card-body p-0 flex-grow-1">
+          <div *ngIf="templateError" class="alert alert-danger m-3">{{templateError}}</div>
+          <div class="table-responsive" *ngIf="!templateError">
+            <table class="table table-sm table-striped align-middle mb-0">
+              <thead class="table-light">
+                <tr><th>Position</th><th>Weights</th><th>Questions</th><th>Active</th><th style="width:140px">Actions</th></tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let t of templates">
+                  <td>{{t.position}}</td>
+                  <td class="small">I:{{t.weightings.initial}} ST:{{t.weightings.systemTask}} T:{{t.weightings.technical}} M:{{t.weightings.manager}} HR:{{t.weightings.hr}}</td>
+                  <td class="small">{{t.customQuestions && t.customQuestions.length ? t.customQuestions.length : 0}}</td>
+                  <td><span class="badge" [class.bg-success]="t.isActive" [class.bg-secondary]="!t.isActive">{{t.isActive?'Yes':'No'}}</span></td>
+                  <td>
+                    <div class="btn-group btn-group-sm">
+                      <button class="btn btn-outline-primary" (click)="editTemplate(t)">Edit</button>
+                      <button class="btn btn-outline-danger" (click)="deleteTemplate(t)">Del</button>
+                    </div>
+                  </td>
+                </tr>
+                <tr *ngIf="!templates.length && !loadingTemplates"><td colspan="5" class="text-center text-muted py-3 small">No templates</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="p-3 text-center" *ngIf="loadingTemplates"><div class="spinner-border"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notifications Tab -->
+  <div *ngIf="tab==='notifications'" class="card shadow-sm">
+    <div class="card-header"><strong>Notification Settings</strong></div>
+    <div class="card-body">
+      <form [formGroup]="notificationForm" class="row g-3 small">
+        <div class="col-md-4">
+          <label class="form-label">Reminder Days Before</label>
+            <input type="number" class="form-control" formControlName="reminderDays">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Digest Hour (0-23)</label>
+          <input type="number" class="form-control" formControlName="digestHour">
+        </div>
+        <div class="col-md-4 d-flex align-items-end">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" formControlName="sendDailyDigest" id="digestChk">
+            <label class="form-check-label" for="digestChk">Send Daily Digest</label>
+          </div>
+        </div>
+        <div class="col-12">
+          <button type="button" class="btn btn-primary" (click)="saveNotifications()" [disabled]="savingNotifications">
+            <span *ngIf="!savingNotifications">Save Settings</span>
+            <span *ngIf="savingNotifications" class="spinner-border spinner-border-sm"></span>
+          </button>
+        </div>
+      </form>
+      <p class="text-muted small mt-3 mb-0">(Stub) Persist to Firestore settings collection in future.</p>
+    </div>
   </div>
 </div>

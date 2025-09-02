@@ -1,38 +1,39 @@
 <div class="container py-4 initial-form-wrapper">
-  <h4 class="mb-3">Initial Interview Checklist</h4>
-  <form (ngSubmit)="save()" #f="ngForm" class="card p-4 shadow-sm">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0">Initial Interview Checklist</h4>
+    <div class="small text-muted">Avg Score: <span class="fw-semibold">{{overallScore() | number:'1.1-1'}}</span></div>
+  </div>
+  <form (ngSubmit)="save()" [formGroup]="form" class="card p-4 shadow-sm rounded-4">
     <div class="row g-3">
-      <div class="col-md-4">
-        <label class="form-label">Eligibility Check</label>
-        <select class="form-select" name="eligibilityCheck" [(ngModel)]="model.eligibilityCheck" required>
+      <div class="col-md-3 col-sm-6">
+        <label class="form-label">Eligibility</label>
+        <select class="form-select" formControlName="eligibilityCheck">
           <option [ngValue]="true">Yes</option>
           <option [ngValue]="false">No</option>
         </select>
       </div>
-      <div class="col-md-4">
-        <label class="form-label">Resume Quality (1-5)</label>
-        <input type="number" min="1" max="5" class="form-control" name="resumeQuality" [(ngModel)]="model.resumeQuality" required>
+      <div class="col-md-3 col-sm-6" *ngFor="let field of ['resumeQuality','experienceMatch','educationMatch']; let i=index">
+        <label class="form-label text-capitalize">{{field.replace('Match',' Match')}} (1-5)</label>
+        <input type="number" min="1" max="5" class="form-control" [formControlName]="field">
       </div>
-      <div class="col-md-4">
-        <label class="form-label">Experience Match (1-5)</label>
-        <input type="number" min="1" max="5" class="form-control" name="experienceMatch" [(ngModel)]="model.experienceMatch" required>
-      </div>
-      <div class="col-md-6">
-        <label class="form-label">Education Match (1-5)</label>
-        <input type="number" min="1" max="5" class="form-control" name="educationMatch" [(ngModel)]="model.educationMatch" required>
-      </div>
-      <div class="col-md-6">
-        <label class="form-label">Documentation Complete</label>
-        <select class="form-select" name="documentationComplete" [(ngModel)]="model.documentationComplete" required>
+      <div class="col-md-3 col-sm-6">
+        <label class="form-label">Documentation</label>
+        <select class="form-select" formControlName="documentationComplete">
           <option [ngValue]="true">Yes</option>
           <option [ngValue]="false">No</option>
         </select>
       </div>
       <div class="col-12">
         <label class="form-label">Comments</label>
-        <textarea class="form-control" rows="3" name="comments" [(ngModel)]="model.comments"></textarea>
+        <textarea class="form-control" rows="3" formControlName="comments" placeholder="Observations, red flags, next steps..."></textarea>
       </div>
     </div>
-    <div class="mt-4"><button class="btn btn-primary" [disabled]="f.invalid">Save Initial Evaluation</button></div>
+    <div class="mt-4 d-flex gap-2">
+      <button class="btn btn-primary" [disabled]="form.invalid || saving">
+        <span *ngIf="!saving">Save Initial Evaluation</span>
+        <span *ngIf="saving" class="spinner-border spinner-border-sm"></span>
+      </button>
+      <button type="button" class="btn btn-outline-secondary" (click)="form.reset()" [disabled]="saving">Reset</button>
+    </div>
   </form>
 </div>

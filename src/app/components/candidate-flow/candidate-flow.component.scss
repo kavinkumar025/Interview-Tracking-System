@@ -1,0 +1,17 @@
+.candidate-flow{font-size:.85rem}
+.flow-container{display:flex;align-items:flex-start;gap:1.25rem;overflow-x:auto;padding:.5rem .25rem}
+.flow-stage{position:relative;min-width:150px;padding:.75rem .75rem .75rem 0;display:flex;align-items:flex-start}
+.stage-circle{width:36px;height:36px;border-radius:50%;background:#e9ecef;display:flex;align-items:center;justify-content:center;font-weight:600;margin-right:.5rem;flex-shrink:0}
+.flow-stage.passed .stage-circle{background:#198754;color:#fff}
+.flow-stage.failed .stage-circle{background:#dc3545;color:#fff}
+.flow-stage.in-progress .stage-circle{background:#0d6efd;color:#fff}
+.flow-stage.pending .stage-circle{background:#adb5bd;color:#fff}
+.stage-body{flex:1;min-width:0}
+.stage-name{font-weight:600;font-size:.8rem;line-height:1.1}
+.stage-status{font-size:.65rem;text-transform:uppercase;letter-spacing:.5px;font-weight:600;display:inline-block;padding:2px 6px;border-radius:12px;margin-top:2px;background:#f1f3f5;color:#495057}
+.stage-status.passed{background:#d1e7dd;color:#0f5132}
+.stage-status.failed{background:#f8d7da;color:#842029}
+.stage-status.in-progress{background:#cfe2ff;color:#084298}
+.stage-status.pending{background:#e2e3e5;color:#41464b}
+.connector{position:absolute;top:18px;left:calc(100% + .25rem);height:2px;width:60px;background:linear-gradient(to right,#adb5bd,#ced4da);}
+.rating{font-size:.7rem;margin-top:2px;font-weight:500}

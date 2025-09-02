@@ -14,6 +14,8 @@ import { ToastService } from '../../services/toast.service';
 })
 export class LoginComponent {
   mode: 'login' | 'signup' = 'login';
+  showPwd = false;
+  year = new Date().getFullYear();
   form!: FormGroup;
   submitting=false; error='';
   constructor(private fb: FormBuilder, private fs: FirebaseService, private router: Router, private toast: ToastService){
@@ -39,13 +41,14 @@ export class LoginComponent {
   async submit(){
     if(this.form.invalid) return;
     this.submitting=true; this.error='';
-    const { name, email, password, department, role } = this.form.value;
+  const { name, email, password, department, role } = this.form.value;
+  const normEmail = (email||'').trim().toLowerCase();
     try {
       if(this.mode==='login'){
-        await this.fs.login(email!, password!);
+    await this.fs.login(normEmail!, password!);
         this.toast.success('Welcome back');
       } else {
-        await this.fs.register(email!, password!, {
+    await this.fs.register(normEmail!, password!, {
           name: name!,
           role: role as any,
           department: department||'General',

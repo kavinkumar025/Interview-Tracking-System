@@ -41,6 +41,7 @@ import {
   FinalDecision,
   UserRole
 } from '../models/interview.model';
+import { CandidateRejection } from '../models/rejection.model';
 
 const firebaseConfig = {
   apiKey: "AIzaSyClqFEICeJQAKyzYP3jWRSx78u9Yw4tg1w",
@@ -122,6 +123,69 @@ export class FirebaseService {
   async getAllUsers(): Promise<User[]> {
     const querySnapshot = await getDocs(collection(this.db, 'users'));
     return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as User));
+  }
+
+  async updateUser(id: string, updates: Partial<User>): Promise<void> {
+    const docRef = doc(this.db, 'users', id);
+    await updateDoc(docRef, updates as any);
+    await this.logAction('update_user', id, 'user', updates);
+  }
+
+  // Evaluation template management
+  async createEvaluationTemplate(tpl: EvaluationTemplate): Promise<string> {
+    const docRef = await addDoc(collection(this.db, 'evaluation_templates'), {
+      ...tpl,
+      createdAt: Timestamp.now()
+    });
+    await this.logAction('create_template', docRef.id, 'user', tpl);
+    return docRef.id;
+  }
+
+  async getEvaluationTemplates(position?: string): Promise<EvaluationTemplate[]> {
+    let col = collection(this.db, 'evaluation_templates');
+    let qref = position ? query(col, where('position','==', position)) : col;
+    const snap = await getDocs(qref);
+    return snap.docs.map(d => ({ id: d.id, ...d.data() } as EvaluationTemplate));
+  }
+
+  async updateEvaluationTemplate(id: string, updates: Partial<EvaluationTemplate>): Promise<void> {
+    const docRef = doc(this.db, 'evaluation_templates', id);
+    await updateDoc(docRef, updates as any);
+    await this.logAction('update_template', id, 'user', updates);
+  }
+
+  async deleteEvaluationTemplate(id: string): Promise<void> {
+    const docRef = doc(this.db, 'evaluation_templates', id);
+    await deleteDoc(docRef);
+    await this.logAction('delete_template', id, 'user', {});
+  }
+
+  async rejectCandidate(candidateId: string, stage: InterviewStage, reason: string): Promise<void> {
+    const candidate = await this.getCandidateById(candidateId);
+  const currentUser = this.currentUserSubject.value;
+    // Update candidate status
+    await this.updateCandidate(candidateId, { status: CandidateStatus.REJECTED });
+    // Create structured rejection record
+    const rejection: CandidateRejection = {
+      candidateId,
+      candidateName: candidate?.name,
+      stage,
+      reason,
+      rejectedAt: new Date(),
+      rejectedBy: currentUser?.id || 'system',
+      rejectedByName: currentUser?.name || 'System'
+    };
+    await addDoc(collection(this.db, 'candidate_rejections'), {
+      ...rejection,
+      rejectedAt: Timestamp.now()
+    });
+    await this.logAction('reject_candidate', candidateId, 'candidate', { stage, reason });
+  }
+
+  async getRejectionsForCandidate(candidateId: string): Promise<CandidateRejection[]> {
+    const qref = query(collection(this.db, 'candidate_rejections'), where('candidateId','==', candidateId), orderBy('rejectedAt','desc'));
+    const snap = await getDocs(qref);
+    return snap.docs.map(d => ({ id: d.id, ...d.data(), rejectedAt: (d.data()['rejectedAt'] as Timestamp).toDate() }) as CandidateRejection);
   }
 
   // Candidate management
@@ -221,6 +285,18 @@ export class FirebaseService {
     );
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as InterviewEvaluation));
+  }
+
+  async getCandidateEvaluationFlow(candidateId: string): Promise<InterviewEvaluation[]> {
+    const evs = await this.getEvaluationsByCandidateId(candidateId);
+    // ensure ordered by stage logical order if timestamps missing
+    const order = [InterviewStage.INITIAL, InterviewStage.SYSTEM_TASK, InterviewStage.TECHNICAL, InterviewStage.MANAGER, InterviewStage.HR];
+    return evs.sort((a,b)=>{
+      const ta = (a as any).completedAt?.toDate ? (a as any).completedAt.toDate().getTime():0;
+      const tb = (b as any).completedAt?.toDate ? (b as any).completedAt.toDate().getTime():0;
+      if(ta && tb) return ta - tb;
+      return order.indexOf(a.stage) - order.indexOf(b.stage);
+    });
   }
 
   async getEvaluationsByStage(stage: InterviewStage): Promise<InterviewEvaluation[]> {
@@ -474,23 +550,97 @@ export class FirebaseService {
   }
 
   private generateFunnelData(candidates: Candidate[], evaluations: InterviewEvaluation[]): any[] {
-    // Implementation for funnel data generation
-    return [];
+    // Build funnel based on stage order and how many candidates reached/completed each stage
+    const stageOrder: InterviewStage[] = [
+      InterviewStage.INITIAL,
+      InterviewStage.SYSTEM_TASK,
+      InterviewStage.TECHNICAL,
+      InterviewStage.MANAGER,
+      InterviewStage.HR
+    ];
+
+    const result: any[] = [];
+    let previousCount: number | null = null;
+
+    stageOrder.forEach(stage => {
+      // Count candidates whose currentStage is at or beyond this stage OR have an evaluation for it
+      const reached = candidates.filter(c => {
+        // Determine index comparison
+        const idxCandidate = stageOrder.indexOf(c.currentStage as InterviewStage);
+        const idxStage = stageOrder.indexOf(stage);
+        if (idxCandidate >= idxStage) return true;
+        // Or evaluation exists for that stage
+        return evaluations.some(e => e.candidateId === c.id && e.stage === stage);
+      }).length;
+
+      const dropOffRate = previousCount ? (previousCount === 0 ? 0 : ((previousCount - reached) / previousCount) * 100) : 0;
+      result.push({ stage, candidateCount: reached, dropOffRate });
+      previousCount = reached;
+    });
+    return result;
   }
 
   private async generateInterviewerStats(evaluations: InterviewEvaluation[]): Promise<any[]> {
-    // Implementation for interviewer statistics
-    return [];
+    const byInterviewer: Record<string, InterviewEvaluation[]> = {};
+    evaluations.filter(e=> e.interviewerId).forEach(e => {
+      byInterviewer[e.interviewerId] = byInterviewer[e.interviewerId] || []; byInterviewer[e.interviewerId].push(e);
+    });
+    const stats: any[] = [];
+    Object.keys(byInterviewer).forEach(interviewerId => {
+      const evs = byInterviewer[interviewerId];
+      const completed = evs.filter(e=> e.isCompleted);
+      if (!completed.length) return;
+      const avg = completed.reduce((a,b)=> a + b.overallRating,0)/completed.length;
+      // Consistency: standard deviation (lower is better) convert to 0-1 scale
+      const variance = completed.reduce((a,b)=> a + Math.pow(b.overallRating - avg,2),0)/completed.length;
+      const stdDev = Math.sqrt(variance);
+      const consistency = Math.max(0, 1 - (stdDev / 5));
+      const specialization = [...new Set(completed.map(e=> e.stage))];
+      stats.push({
+        interviewerId,
+        interviewerName: completed[0].interviewerName || 'N/A',
+        totalInterviews: completed.length,
+        averageRating: +avg.toFixed(2),
+        consistency: +(consistency*100).toFixed(1),
+        averageTime: 60, // placeholder
+        specialization
+      });
+    });
+    // Sort by total interviews desc
+    return stats.sort((a,b)=> b.totalInterviews - a.totalInterviews).slice(0,10);
   }
 
   private generateMonthlyTrends(candidates: Candidate[]): any[] {
-    // Implementation for monthly trends
-    return [];
+    const map: Record<string, { month:string; year:number; totalCandidates:number; hired:number; rejected:number; averageTime:number; } > = {};
+    candidates.forEach(c => {
+      const d = (c as any).createdAt?.toDate ? (c as any).createdAt.toDate() : c.createdAt instanceof Date ? c.createdAt : new Date();
+      const key = `${d.getFullYear()}-${d.getMonth()+1}`;
+      if(!map[key]) map[key] = { month: d.toLocaleString('default',{month:'short'}), year:d.getFullYear(), totalCandidates:0, hired:0, rejected:0, averageTime:0 };
+      map[key].totalCandidates++;
+      if(c.status === CandidateStatus.HIRED) map[key].hired++;
+      if(c.status === CandidateStatus.REJECTED) map[key].rejected++;
+    });
+    return Object.values(map).sort((a,b)=> (a.year===b.year? a.month.localeCompare(b.month): a.year - b.year));
   }
 
   private generatePositionStats(candidates: Candidate[], evaluations: InterviewEvaluation[]): any[] {
-    // Implementation for position-wise statistics
-    return [];
+    const byPosition: Record<string, Candidate[]> = {};
+    candidates.forEach(c => { byPosition[c.position] = byPosition[c.position] || []; byPosition[c.position].push(c); });
+    const stats: any[] = [];
+    Object.keys(byPosition).forEach(position => {
+      const cands = byPosition[position];
+      const hired = cands.filter(c=> c.status === CandidateStatus.HIRED).length;
+      // Average rating across completed evaluations for these candidates
+      const candIds = new Set(cands.map(c=> c.id));
+      const evs = evaluations.filter(e=> candIds.has(e.candidateId) && e.isCompleted);
+      const avgRating = evs.length? evs.reduce((a,b)=> a + b.overallRating,0)/evs.length : 0;
+      // Determine most common failure stage
+      const failures: Record<string, number> = {};
+      evs.filter(e=> e.overallRating < 3).forEach(e=> { failures[e.stage] = (failures[e.stage]||0)+1; });
+      const mostCommonFailureStage = Object.keys(failures).sort((a,b)=> failures[b]-failures[a])[0] || null;
+      stats.push({ position, totalCandidates: cands.length, hired, averageRating:+avgRating.toFixed(2), mostCommonFailureStage });
+    });
+    return stats.sort((a,b)=> b.totalCandidates - a.totalCandidates).slice(0,10);
   }
 
   private calculateAverageTimePerStage(evaluations: InterviewEvaluation[]): number {

@@ -1,6 +1,6 @@
 <div class="container py-4 technical-form-wrapper">
   <h4 class="mb-3">Technical Interview Feedback</h4>
-  <form (ngSubmit)="save()" #f="ngForm" class="card p-4 shadow-sm">
+  <form [formGroup]="form" (ngSubmit)="save()" class="card p-4 shadow-sm">
     <div class="row g-3">
       <div class="col-md-4" *ngFor="let field of [
         {key:'technicalSkills', label:'Technical Skills'},
@@ -10,21 +10,42 @@
         {key:'architecturalKnowledge', label:'Architecture'},
         {key:'communicationDuringTechnical', label:'Communication'}]">
         <label class="form-label">{{field.label}} (1-5)</label>
-        <input type="number" min="1" max="5" class="form-control" name="{{field.key}}" [(ngModel)]="model[field.key]" required>
+        <input type="number" min="1" max="5" class="form-control" [formControlName]="field.key">
       </div>
-      <div class="col-12">
-        <label class="form-label">Questions Asked</label>
-        <textarea class="form-control" rows="2" name="questions" [(ngModel)]="model.questions"></textarea>
+      <div class="col-md-6">
+        <label class="form-label">Questions Asked (one per line)</label>
+        <textarea rows="4" class="form-control" formControlName="questions" placeholder="Question 1\nQuestion 2"></textarea>
       </div>
-      <div class="col-12">
-        <label class="form-label">Solutions / Observations</label>
-        <textarea class="form-control" rows="3" name="solutions" [(ngModel)]="model.solutions"></textarea>
+      <div class="col-md-6">
+        <label class="form-label">Solutions / Observations (one per line)</label>
+        <textarea rows="4" class="form-control" formControlName="solutions" placeholder="Observation 1\nObservation 2"></textarea>
       </div>
-      <div class="col-12">
-        <label class="form-label">Areas to Improve</label>
-        <textarea class="form-control" rows="2" name="improve" [(ngModel)]="model.improve"></textarea>
+      <div class="col-md-6">
+        <label class="form-label">Areas to Improve (one per line)</label>
+        <textarea rows="4" class="form-control" formControlName="improve" placeholder="Area 1\nArea 2"></textarea>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Recommendation</label>
+        <select class="form-select" formControlName="recommendation">
+          <option *ngFor="let r of recommendationOptions" [value]="r.value">{{r.label}}</option>
+        </select>
+        <div class="form-text">Overall rating auto-calculated.</div>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Strengths (comma or newline separated)</label>
+        <textarea rows="3" class="form-control" formControlName="strengths" placeholder="Strong analytical skill\nClean code"></textarea>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Weaknesses / Areas for Improvement</label>
+        <textarea rows="3" class="form-control" formControlName="weaknesses" placeholder="Needs deeper system design examples"></textarea>
       </div>
     </div>
-    <div class="mt-4"><button class="btn btn-primary" [disabled]="f.invalid">Save Technical Evaluation</button></div>
+    <div class="mt-4 d-flex gap-2">
+      <button class="btn btn-primary" [disabled]="form.invalid || submitting">
+        <span *ngIf="!submitting">Save Technical Evaluation</span>
+        <span *ngIf="submitting" class="spinner-border spinner-border-sm"></span>
+      </button>
+      <button type="button" class="btn btn-outline-secondary" [disabled]="submitting" (click)="router.navigate(['/candidates'])">Cancel</button>
+    </div>
   </form>
 </div>

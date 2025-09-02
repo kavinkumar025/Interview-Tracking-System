@@ -1,49 +1,110 @@
-<div class="auth-wrapper d-flex align-items-center justify-content-center py-5">
-  <div class="login-card shadow-sm p-4 rounded bg-white w-100">
-    <div class="d-flex justify-content-between align-items-center mb-2">
-      <h4 class="mb-0">{{ mode==='login' ? 'Sign In' : 'Create Account' }}</h4>
-      <button class="btn btn-link text-decoration-none small" (click)="switchMode()">
-        {{ mode==='login' ? 'Need an account?' : 'Have an account?' }}
-      </button>
+<div class="auth-wrapper d-flex align-items-center py-5">
+  <div class="login-shell container-xl">
+    <div class="row g-4 align-items-stretch">
+      <!-- Marketing / Brand Panel -->
+      <div class="col-lg-6 d-none d-lg-flex">
+        <div class="brand-panel shadow-lg rounded-4 w-100 p-5 position-relative overflow-hidden">
+          <div class="decor-circle one"></div>
+            <div class="decor-circle two"></div>
+          <div class="mb-4">
+            <h1 class="display-6 fw-bold text-white mb-3 d-flex align-items-center gap-3">
+              <span class="brand-icon"><i class="bi bi-diagram-3"></i></span>
+              Interview Portal
+            </h1>
+            <p class="lead text-white-50 mb-4">Streamline multi‑stage hiring with structured evaluations, analytics, and transparent collaboration.</p>
+            <ul class="feature-list list-unstyled m-0">
+              <li><i class="bi bi-check-circle-fill"></i> Stage‑wise score consolidation</li>
+              <li><i class="bi bi-check-circle-fill"></i> Role & permission controls</li>
+              <li><i class="bi bi-check-circle-fill"></i> Real‑time dashboard & funnel</li>
+              <li><i class="bi bi-check-circle-fill"></i> Audit & compliance trail</li>
+            </ul>
+          </div>
+          <div class="text-white-50 small position-absolute bottom-0 start-0 p-3">© {{ year }} Hiring Suite</div>
+        </div>
+      </div>
+      <!-- Auth Form Panel -->
+      <div class="col-lg-6 col-md-9 col-sm-11 mx-auto">
+        <div class="login-card shadow-lg rounded-4 bg-white p-4 p-md-5 position-relative">
+          <div class="mb-4">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+              <div>
+                <h3 class="fw-bold mb-1 d-flex align-items-center gap-2">
+                  <i class="bi" [ngClass]="mode==='login' ? 'bi-box-arrow-in-right text-primary':'bi-person-plus text-success'"></i>
+                  {{ mode==='login' ? 'Welcome Back' : 'Create Account' }}
+                </h3>
+                <small class="text-muted" *ngIf="mode==='login'">Access your evaluation workspace</small>
+                <small class="text-muted" *ngIf="mode==='signup'">Provision a new platform user</small>
+              </div>
+              <div class="text-end small toggle-wrapper">
+                <span class="text-muted me-1">{{ mode==='login' ? 'New here?' : 'Already registered?' }}</span>
+                <button class="btn btn-sm btn-outline-primary" (click)="switchMode()">
+                  <i class="bi" [ngClass]="{'bi-person-plus': mode==='login', 'bi-box-arrow-in-right': mode==='signup'}"></i>
+                  {{ mode==='login' ? 'Sign Up' : 'Login' }}
+                </button>
+              </div>
+            </div>
+          </div>
+          <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+            <div class="row g-3">
+              <div class="col-12" *ngIf="mode==='signup'">
+                <label class="form-label">Full Name</label>
+                <div class="input-group input-group-lg has-icon">
+                  <span class="input-group-text"><i class="bi bi-person"></i></span>
+                  <input class="form-control" formControlName="name" placeholder="Jane Doe">
+                </div>
+                <div class="invalid-msg" *ngIf="form.get('name')?.touched && form.get('name')?.invalid">Name required</div>
+              </div>
+              <div class="col-12">
+                <label class="form-label">Email</label>
+                <div class="input-group input-group-lg has-icon">
+                  <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                  <input class="form-control" formControlName="email" type="email" placeholder="name@company.com">
+                </div>
+                <div class="invalid-msg" *ngIf="form.get('email')?.touched && form.get('email')?.invalid">Valid email required</div>
+              </div>
+              <div class="col-12">
+                <label class="form-label">Password</label>
+                <div class="input-group input-group-lg password-group has-icon">
+                  <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                  <input class="form-control" [type]="showPwd ? 'text':'password'" formControlName="password" placeholder="••••••••">
+                  <button type="button" class="btn btn-outline-secondary" (click)="showPwd=!showPwd" tabindex="-1"><i class="bi" [ngClass]="showPwd ? 'bi-eye-slash':'bi-eye'"></i></button>
+                </div>
+                <div class="invalid-msg" *ngIf="form.get('password')?.touched && form.get('password')?.invalid">Min 6 characters</div>
+              </div>
+              <div class="col-md-6" *ngIf="mode==='signup'">
+                <label class="form-label">Department</label>
+                <div class="input-group input-group-lg has-icon">
+                  <span class="input-group-text"><i class="bi bi-diagram-3"></i></span>
+                  <input class="form-control" formControlName="department" placeholder="Engineering">
+                </div>
+              </div>
+              <div class="col-md-6" *ngIf="mode==='signup'">
+                <label class="form-label">Role</label>
+                <div class="input-group input-group-lg has-icon">
+                  <span class="input-group-text"><i class="bi bi-person-badge"></i></span>
+                  <select class="form-select" formControlName="role">
+                    <option value="interviewer">Interviewer</option>
+                    <option value="manager">Manager</option>
+                    <option value="hr">HR</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div *ngIf="error" class="alert alert-danger py-2 mt-3 small d-flex align-items-center gap-2"><i class="bi bi-exclamation-triangle-fill"></i><span>{{error}}</span></div>
+            <button class="btn w-100 btn-lg gradient-btn mt-4" [disabled]="form.invalid || submitting">
+              <span *ngIf="!submitting"><i class="bi" [ngClass]="{'bi-box-arrow-in-right': mode==='login','bi-person-plus': mode==='signup'}"></i> {{ mode==='login' ? 'Login' : 'Create Account' }}</span>
+              <span *ngIf="submitting" class="spinner-border spinner-border-sm"></span>
+            </button>
+          </form>
+          <div class="mt-4 small text-muted d-flex flex-wrap gap-2 feature-badges">
+            <span><i class="bi bi-speedometer2"></i> Fast</span>
+            <span><i class="bi bi-shield-check"></i> Secure</span>
+            <span><i class="bi bi-people"></i> Collaborative</span>
+            <span><i class="bi bi-graph-up"></i> Insightful</span>
+          </div>
+        </div>
+      </div>
     </div>
-    <p class="text-muted small mb-4" *ngIf="mode==='login'">Enter your credentials to continue</p>
-    <p class="text-muted small mb-4" *ngIf="mode==='signup'">Fill details to create your interviewer account</p>
-    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
-      <div class="mb-3" *ngIf="mode==='signup'">
-        <label class="form-label fw-semibold">Full Name</label>
-        <input class="form-control" formControlName="name" placeholder="Jane Doe">
-        <div class="invalid-feedback d-block" *ngIf="form.get('name')?.touched && form.get('name')?.invalid">Name required (min 2 chars)</div>
-      </div>
-      <div class="mb-3">
-        <label class="form-label fw-semibold">Email</label>
-        <input class="form-control" formControlName="email" type="email" placeholder="name@company.com">
-        <div class="invalid-feedback d-block" *ngIf="form.get('email')?.touched && form.get('email')?.invalid">Valid email required</div>
-      </div>
-      <div class="mb-3">
-        <label class="form-label fw-semibold">Password</label>
-        <input class="form-control" formControlName="password" type="password" placeholder="••••••••">
-        <div class="invalid-feedback d-block" *ngIf="form.get('password')?.touched && form.get('password')?.invalid">Min 6 characters</div>
-      </div>
-      <div class="row" *ngIf="mode==='signup'">
-        <div class="col-md-6 mb-3">
-          <label class="form-label fw-semibold">Department</label>
-            <input class="form-control" formControlName="department" placeholder="Engineering">
-        </div>
-        <div class="col-md-6 mb-3">
-          <label class="form-label fw-semibold">Role</label>
-          <select class="form-select" formControlName="role">
-            <option value="interviewer">Interviewer</option>
-            <option value="manager">Manager</option>
-            <option value="hr">HR</option>
-            <option value="admin">Admin</option>
-          </select>
-        </div>
-      </div>
-      <div *ngIf="error" class="alert alert-danger py-2 small">{{error}}</div>
-      <button class="btn btn-primary w-100" [disabled]="form.invalid || submitting">
-        <span *ngIf="!submitting">{{ mode==='login' ? 'Login' : 'Sign Up' }}</span>
-        <span *ngIf="submitting" class="spinner-border spinner-border-sm"></span>
-      </button>
-    </form>
   </div>
 </div>

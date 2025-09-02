@@ -1,41 +1,69 @@
 <div class="container py-4 system-task-wrapper">
   <h4 class="mb-3">System Task Feedback</h4>
-  <form (ngSubmit)="save()" #f="ngForm" class="card p-4 shadow-sm">
+  <form [formGroup]="form" (ngSubmit)="save()" class="card p-4 shadow-sm">
     <div class="row g-3">
       <div class="col-md-4">
         <label class="form-label">Task Type</label>
-        <select class="form-select" name="taskType" [(ngModel)]="model.taskType" required>
+        <select class="form-select" formControlName="taskType">
           <option value="coding">Coding</option>
           <option value="case-study">Case Study</option>
           <option value="design">Design</option>
           <option value="other">Other</option>
         </select>
+  <div class="invalid-feedback d-block" *ngIf="f['taskType'].touched && f['taskType'].invalid">Required</div>
       </div>
       <div class="col-md-4">
         <label class="form-label">Completion Time (min)</label>
-        <input type="number" class="form-control" name="completionTime" [(ngModel)]="model.completionTime" required>
+        <input type="number" class="form-control" formControlName="completionTime">
+  <div class="invalid-feedback d-block" *ngIf="f['completionTime'].touched && f['completionTime'].invalid">Enter valid minutes</div>
       </div>
       <div class="col-md-4">
         <label class="form-label">Code Quality (1-5)</label>
-        <input type="number" min="1" max="5" class="form-control" name="codeQuality" [(ngModel)]="model.codeQuality">
+        <input type="number" min="1" max="5" class="form-control" formControlName="codeQuality">
+  <div class="invalid-feedback d-block" *ngIf="f['codeQuality'].touched && f['codeQuality'].invalid">1-5</div>
       </div>
       <div class="col-md-4">
         <label class="form-label">Problem Solving (1-5)</label>
-        <input type="number" min="1" max="5" class="form-control" name="problemSolvingAbility" [(ngModel)]="model.problemSolvingAbility" required>
+        <input type="number" min="1" max="5" class="form-control" formControlName="problemSolvingAbility">
+  <div class="invalid-feedback d-block" *ngIf="f['problemSolvingAbility'].touched && f['problemSolvingAbility'].invalid">1-5</div>
       </div>
       <div class="col-md-4">
         <label class="form-label">Creativity (1-5)</label>
-        <input type="number" min="1" max="5" class="form-control" name="creativity" [(ngModel)]="model.creativity" required>
+        <input type="number" min="1" max="5" class="form-control" formControlName="creativity">
+  <div class="invalid-feedback d-block" *ngIf="f['creativity'].touched && f['creativity'].invalid">1-5</div>
       </div>
       <div class="col-md-4">
         <label class="form-label">Test Cases Passed</label>
-        <input type="number" class="form-control" name="testCases" [(ngModel)]="model.testCases">
+        <input type="number" class="form-control" formControlName="testCases">
       </div>
       <div class="col-12">
         <label class="form-label">Task Description / Notes</label>
-        <textarea class="form-control" rows="3" name="taskDescription" [(ngModel)]="model.taskDescription"></textarea>
+        <textarea class="form-control" rows="3" formControlName="taskDescription"></textarea>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Strengths (comma or newline separated)</label>
+        <textarea class="form-control" rows="3" formControlName="strengths" placeholder="Fast learner, Good architecture vision"></textarea>
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Weaknesses (comma or newline separated)</label>
+        <textarea class="form-control" rows="3" formControlName="weaknesses" placeholder="Needs test coverage focus"></textarea>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Recommendation</label>
+        <select class="form-select" formControlName="recommendation">
+          <option *ngFor="let r of recommendationOptions" [value]="r.value">{{r.label}}</option>
+        </select>
+      </div>
+      <div class="col-md-4 d-flex align-items-end">
+        <div class="p-2 bg-light rounded small w-100">
+          <div class="text-muted small">Overall</div>
+          <div class="fw-semibold">{{calculateOverall(form.value) || 0}}</div>
+        </div>
       </div>
     </div>
-    <div class="mt-4"><button class="btn btn-primary" [disabled]="f.invalid">Save System Task Evaluation</button></div>
+    <div class="mt-4"><button class="btn btn-primary" [disabled]="form.invalid || submitting">
+      <span *ngIf="!submitting">Save System Task Evaluation</span>
+      <span *ngIf="submitting" class="spinner-border spinner-border-sm"></span>
+    </button></div>
   </form>
 </div>

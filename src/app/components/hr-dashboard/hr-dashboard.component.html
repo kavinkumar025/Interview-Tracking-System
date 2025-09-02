@@ -1,8 +1,94 @@
-<div class="container py-4 dashboard-wrapper">
-  <h4 class="mb-3">HR Dashboard</h4>
-  <div class="row g-3">
-    <div class="col-md-3" *ngFor="let metric of ['Candidates','Scheduled','Completed','Pass Rate']">
-      <div class="card p-3 shadow-sm small-metric"><span class="text-muted">{{metric}}</span><h5 class="mb-0 mt-1 fw-semibold">--</h5></div>
+<div class="container-fluid py-4 dashboard-wrapper">
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+    <div>
+      <h3 class="fw-bold mb-1">HR Dashboard</h3>
+      <small class="text-muted">Operational hiring oversight & performance indicators</small>
+    </div>
+    <div class="d-flex gap-2 align-items-center">
+      <div class="form-check form-switch small me-2">
+        <input class="form-check-input" type="checkbox" id="autoRef" [(ngModel)]="autoRefresh" (change)="toggleAuto()">
+        <label class="form-check-label" for="autoRef">Auto 30s</label>
+      </div>
+      <button class="btn btn-outline-secondary btn-sm" (click)="load()" [disabled]="loading"><i class="bi bi-arrow-clockwise"></i></button>
     </div>
   </div>
+
+  <div *ngIf="error" class="alert alert-danger py-2 small d-flex align-items-center gap-2"><i class="bi bi-exclamation-triangle-fill"></i>{{error}}</div>
+  <div *ngIf="loading" class="text-center py-5"><div class="spinner-border text-primary"></div></div>
+
+  <ng-container *ngIf="!loading && metrics">
+    <!-- KPI Cards -->
+    <div class="row g-4 mb-1">
+      <div class="col-6 col-md-3" *ngFor="let kpi of [
+        {label:'Total Candidates', value:metrics.totalCandidates, icon:'people-fill', color:'primary'},
+        {label:'Interviews Scheduled', value:metrics.interviewsScheduled, icon:'calendar2-event', color:'info'},
+        {label:'Interviews Completed', value:metrics.interviewsCompleted, icon:'check2-circle', color:'success'},
+        {label:'Overall Pass Rate', value: (metrics.overallPassRate | number:'1.0-0') + '%', icon:'bar-chart-line', color:'warning'}]">
+        <div class="kpi-card h-100 shadow-sm rounded-4 p-3 p-lg-4 position-relative">
+          <div class="icon-wrap bg-{{kpi.color}} bg-gradient"><i class="bi bi-{{kpi.icon}}"></i></div>
+          <div class="mt-2 small text-uppercase fw-semibold text-muted tracking-tight">{{kpi.label}}</div>
+          <div class="display-value fw-bold">{{kpi.value}}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row g-4 mt-1">
+      <div class="col-xl-7">
+        <div class="card h-100 shadow-sm rounded-4">
+          <div class="card-header bg-transparent border-0 d-flex align-items-center justify-content-between py-3">
+            <h6 class="mb-0 fw-semibold"><i class="bi bi-diagram-3 me-1 text-primary"></i> Stage Progress</h6>
+            <select class="form-select form-select-sm w-auto" [(ngModel)]="filteredStage">
+              <option value="all">All Stages</option>
+              <option *ngFor="let s of stageList()" [value]="s">{{s}}</option>
+            </select>
+          </div>
+          <div class="card-body pt-0">
+            <canvas id="hrStageChart" height="220"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="col-xl-5">
+        <div class="card h-100 shadow-sm rounded-4">
+          <div class="card-header bg-transparent border-0 d-flex align-items-center justify-content-between py-3">
+            <h6 class="mb-0 fw-semibold"><i class="bi bi-graph-up-arrow me-1 text-primary"></i> Pipeline Trend</h6>
+          </div>
+          <div class="card-body pt-2">
+            <canvas id="hrFunnelChart" height="220"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stage Table -->
+    <div class="card shadow-sm rounded-4 mt-4">
+      <div class="card-header bg-transparent border-0 py-3 d-flex align-items-center gap-2">
+        <h6 class="mb-0 fw-semibold"><i class="bi bi-table me-1 text-primary"></i> Stage Statistics</h6>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-sm align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Stage</th>
+              <th>Total</th>
+              <th>Completed</th>
+              <th>Passed</th>
+              <th>Failed</th>
+              <th>Avg Rating</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let s of displayedStageStats()">
+              <td class="text-capitalize">{{s[0].replace('-',' ')}}</td>
+              <td>{{s[1].total}}</td>
+              <td>{{s[1].completed}}</td>
+              <td class="text-success fw-semibold">{{s[1].passed}}</td>
+              <td class="text-danger fw-semibold">{{s[1].failed}}</td>
+              <td>{{s[1].averageRating | number:'1.1-1'}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </ng-container>
 </div>

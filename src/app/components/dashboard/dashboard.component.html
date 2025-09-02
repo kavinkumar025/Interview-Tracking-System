@@ -1,0 +1,179 @@
+<div class="container-fluid py-4 dashboard-wrapper">
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+      <h3 class="fw-bold mb-1 d-flex align-items-center gap-2"><i class="bi bi-speedometer2 text-primary"></i> Hiring Dashboard</h3>
+      <small class="text-muted">Real-time overview of pipeline performance</small>
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-secondary btn-sm" (click)="refresh()" [disabled]="loading"><i class="bi bi-arrow-clockwise"></i></button>
+    </div>
+  </div>
+
+  <div *ngIf="error" class="alert alert-danger py-2 small d-flex align-items-center gap-2"><i class="bi bi-exclamation-triangle-fill"></i>{{error}}</div>
+  <div *ngIf="loading" class="text-center py-5"><div class="spinner-border text-primary"></div></div>
+
+  <ng-container *ngIf="!loading && metrics">
+    <!-- KPI Cards -->
+    <div class="row g-4 mb-1">
+      <div class="col-6 col-md-3" *ngFor="let kpi of [
+        {label:'Total Candidates', value:metrics.totalCandidates, icon:'people-fill', color:'primary'},
+        {label:'Interviews Scheduled', value:metrics.interviewsScheduled, icon:'calendar2-event', color:'info'},
+        {label:'Interviews Completed', value:metrics.interviewsCompleted, icon:'check2-circle', color:'success'},
+        {label:'Overall Pass Rate', value: (metrics.overallPassRate | number:'1.0-0') + '%', icon:'bar-chart-line', color:'warning'}]">
+        <div class="kpi-card h-100 shadow-sm rounded-4 p-3 p-lg-4 position-relative">
+          <div class="icon-wrap bg-{{kpi.color}} bg-gradient"><i class="bi bi-{{kpi.icon}}"></i></div>
+          <div class="mt-2 small text-uppercase fw-semibold text-muted tracking-tight">{{kpi.label}}</div>
+          <div class="display-value fw-bold">{{kpi.value}}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row g-4 mt-1">
+      <div class="col-xl-7">
+        <div class="card h-100 shadow-sm rounded-4">
+          <div class="card-header bg-transparent border-0 d-flex align-items-center justify-content-between py-3">
+            <h6 class="mb-0 fw-semibold"><i class="bi bi-diagram-3 me-1 text-primary"></i> Stage Outcomes</h6>
+          </div>
+          <div class="card-body pt-0">
+            <canvas id="stageChart" height="220"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="col-xl-5">
+        <div class="card h-100 shadow-sm rounded-4">
+          <div class="card-header bg-transparent border-0 d-flex align-items-center justify-content-between py-3">
+            <h6 class="mb-0 fw-semibold"><i class="bi bi-pie-chart-fill me-1 text-primary"></i> Pass Rate</h6>
+          </div>
+          <div class="card-body pt-0 d-flex flex-column align-items-center justify-content-center">
+            <div class="position-relative" style="width:230px;">
+              <canvas id="passRateChart" height="230"></canvas>
+              <div class="chart-center-label fw-bold text-primary">{{metrics.overallPassRate | number:'1.0-0'}}%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stage Table -->
+    <div class="card shadow-sm rounded-4 mt-4">
+      <div class="card-header bg-transparent border-0 py-3 d-flex align-items-center gap-2">
+        <h6 class="mb-0 fw-semibold"><i class="bi bi-table me-1 text-primary"></i> Stage Statistics</h6>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-sm align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Stage</th>
+              <th>Total</th>
+              <th>Completed</th>
+              <th>Passed</th>
+              <th>Failed</th>
+              <th>Avg Rating</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let s of (metrics.stageStats | keyvalue)">
+              <td class="text-capitalize">{{s.key.replace('-',' ')}}</td>
+              <td>{{s.value.total}}</td>
+              <td>{{s.value.completed}}</td>
+              <td class="text-success fw-semibold">{{s.value.passed}}</td>
+              <td class="text-danger fw-semibold">{{s.value.failed}}</td>
+              <td>{{s.value.averageRating | number:'1.1-1'}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Advanced Analytics Row -->
+    <div class="row g-4 mt-4">
+      <div class="col-xl-4">
+        <div class="card shadow-sm rounded-4 h-100">
+          <div class="card-header bg-transparent border-0 py-3 d-flex align-items-center gap-2">
+            <h6 class="mb-0 fw-semibold"><i class="bi bi-filter-circle me-1 text-primary"></i> Funnel</h6>
+          </div>
+          <div class="card-body p-0">
+            <table class="table table-sm mb-0 align-middle">
+              <thead class="table-light"><tr><th>Stage</th><th>Candidates</th><th>Drop Off%</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let f of metrics.candidateFunnelData">
+                  <td class="text-capitalize">{{f.stage.replace('-',' ')}}</td>
+                  <td>{{f.candidateCount}}</td>
+                  <td>{{f.dropOffRate | number:'1.0-1'}}%</td>
+                </tr>
+                <tr *ngIf="!metrics.candidateFunnelData.length"><td colspan="3" class="text-center text-muted small py-2">No data</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="col-xl-4">
+        <div class="card shadow-sm rounded-4 h-100">
+          <div class="card-header bg-transparent border-0 py-3 d-flex align-items-center gap-2">
+            <h6 class="mb-0 fw-semibold"><i class="bi bi-people me-1 text-primary"></i> Top Interviewers</h6>
+          </div>
+          <div class="card-body p-0">
+            <table class="table table-sm mb-0 align-middle">
+              <thead class="table-light"><tr><th>Name</th><th>Interviews</th><th>Avg</th><th>Consistency</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let i of metrics.interviewerStats">
+                  <td>{{i.interviewerName}}</td>
+                  <td>{{i.totalInterviews}}</td>
+                  <td>{{i.averageRating}}</td>
+                  <td>{{i.consistency}}%</td>
+                </tr>
+                <tr *ngIf="!metrics.interviewerStats.length"><td colspan="4" class="text-center text-muted small py-2">No data</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="col-xl-4">
+        <div class="card shadow-sm rounded-4 h-100">
+          <div class="card-header bg-transparent border-0 py-3 d-flex align-items-center gap-2">
+            <h6 class="mb-0 fw-semibold"><i class="bi bi-calendar3 me-1 text-primary"></i> Monthly Trends</h6>
+          </div>
+          <div class="card-body p-0">
+            <table class="table table-sm mb-0 align-middle">
+              <thead class="table-light"><tr><th>Month</th><th>Total</th><th>Hired</th><th>Rejected</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let m of metrics.monthlyHiringTrends">
+                  <td>{{m.month}} {{m.year}}</td>
+                  <td>{{m.totalCandidates}}</td>
+                  <td class="text-success fw-semibold">{{m.hired}}</td>
+                  <td class="text-danger fw-semibold">{{m.rejected}}</td>
+                </tr>
+                <tr *ngIf="!metrics.monthlyHiringTrends.length"><td colspan="4" class="text-center text-muted small py-2">No data</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Position Stats -->
+    <div class="card shadow-sm rounded-4 mt-4">
+      <div class="card-header bg-transparent border-0 py-3 d-flex align-items-center gap-2">
+        <h6 class="mb-0 fw-semibold"><i class="bi bi-briefcase me-1 text-primary"></i> Position Statistics</h6>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-sm align-middle mb-0">
+          <thead class="table-light">
+            <tr><th>Position</th><th>Candidates</th><th>Hired</th><th>Avg Rating</th><th>Common Failure Stage</th></tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let p of metrics.positionWiseStats">
+              <td>{{p.position}}</td>
+              <td>{{p.totalCandidates}}</td>
+              <td class="text-success fw-semibold">{{p.hired}}</td>
+              <td>{{p.averageRating}}</td>
+              <td class="text-capitalize">{{p.mostCommonFailureStage ? p.mostCommonFailureStage.replace('-',' ') : '-'}}</td>
+            </tr>
+            <tr *ngIf="!metrics.positionWiseStats.length"><td colspan="5" class="text-center text-muted small py-2">No data</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </ng-container>
+</div>

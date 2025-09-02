@@ -1,35 +1,86 @@
 <div class="container py-4 hr-form-wrapper">
-  <h4 class="mb-3">HR Interview Feedback</h4>
-  <form (ngSubmit)="save()" #f="ngForm" class="card p-4 shadow-sm">
+  <h4 class="mb-3">HR Interview Feedback & Final Decision</h4>
+  <form [formGroup]="form" (ngSubmit)="save()" class="card p-4 shadow-sm">
     <div class="row g-3">
-      <div class="col-md-3" *ngFor="let field of [
+      <div class="col-md-4" *ngFor="let field of [
         {key:'cultureFit', label:'Culture Fit'},
         {key:'communicationSkills', label:'Communication'},
         {key:'motivation', label:'Motivation'}]">
         <label class="form-label">{{field.label}} (1-5)</label>
-        <input type="number" min="1" max="5" class="form-control" name="{{field.key}}" [(ngModel)]="model[field.key]" required>
+        <input type="number" min="1" max="5" class="form-control" [formControlName]="field.key">
       </div>
       <div class="col-md-4">
         <label class="form-label">Salary Expectation</label>
-        <input class="form-control" type="number" name="salaryExpectation" [(ngModel)]="model.salaryExpectation">
+        <input class="form-control" type="number" formControlName="salaryExpectation">
       </div>
       <div class="col-md-4">
         <label class="form-label">Negotiated Salary</label>
-        <input class="form-control" type="number" name="negotiatedSalary" [(ngModel)]="model.negotiatedSalary">
+        <input class="form-control" type="number" formControlName="negotiatedSalary">
       </div>
       <div class="col-md-4">
         <label class="form-label">Availability To Join</label>
-        <input class="form-control" name="availabilityToJoin" [(ngModel)]="model.availabilityToJoin" placeholder="e.g. 30 days">
+        <input class="form-control" formControlName="availabilityToJoin" placeholder="e.g. 30 days">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Work Preference</label>
+        <select class="form-select" formControlName="workFromHomePreference">
+          <option>Remote</option>
+          <option>Hybrid</option>
+          <option>Onsite</option>
+        </select>
+      </div>
+      <div class="col-md-4 d-flex align-items-center gap-3">
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" formControlName="relocatationWillingness" id="relocateChk">
+          <label class="form-check-label" for="relocateChk">Willing to Relocate</label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" formControlName="backgroundCheck" id="bgChk">
+          <label class="form-check-label" for="bgChk">Background Check</label>
+        </div>
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" formControlName="referenceCheck" id="refChk">
+          <label class="form-check-label" for="refChk">Reference Check</label>
+        </div>
       </div>
       <div class="col-md-6">
         <label class="form-label">Career Aspiration</label>
-        <textarea rows="2" class="form-control" name="careerAspiration" [(ngModel)]="model.careerAspiration"></textarea>
+        <textarea rows="3" class="form-control" formControlName="careerAspiration"></textarea>
       </div>
       <div class="col-md-6">
         <label class="form-label">Comments</label>
-        <textarea rows="2" class="form-control" name="comments" [(ngModel)]="model.comments"></textarea>
+        <textarea rows="3" class="form-control" formControlName="comments"></textarea>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Recommendation</label>
+        <select class="form-select" formControlName="recommendation">
+          <option *ngFor="let r of recommendationOptions" [value]="r.value">{{r.label}}</option>
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Final Decision</label>
+        <select class="form-select" formControlName="decision">
+          <option *ngFor="let d of decisionOptions" [value]="d.value">{{d.label}}</option>
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Strengths (comma/new line)</label>
+        <textarea rows="3" class="form-control" formControlName="strengths"></textarea>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">Weaknesses</label>
+        <textarea rows="3" class="form-control" formControlName="weaknesses"></textarea>
+      </div>
+      <div class="col-md-4 d-flex flex-column justify-content-end">
+        <div class="small text-muted">Auto Overall: {{ overall(form.value) }}</div>
       </div>
     </div>
-    <div class="mt-4"><button class="btn btn-primary" [disabled]="f.invalid">Save HR Evaluation</button></div>
+    <div class="mt-4 d-flex gap-2">
+      <button class="btn btn-primary" [disabled]="form.invalid || submitting">
+        <span *ngIf="!submitting">Save HR Evaluation & Decision</span>
+        <span *ngIf="submitting" class="spinner-border spinner-border-sm"></span>
+      </button>
+      <button type="button" class="btn btn-outline-secondary" [disabled]="submitting" (click)="router.navigate(['/candidates'])">Cancel</button>
+    </div>
   </form>
 </div>

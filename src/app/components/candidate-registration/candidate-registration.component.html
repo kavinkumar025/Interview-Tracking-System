@@ -1,35 +1,46 @@
 <div class="container py-4 registration-wrapper">
   <h4 class="mb-3">Candidate Registration</h4>
-  <form (ngSubmit)="save()" #f="ngForm" class="card p-4 shadow-sm">
+  <form (ngSubmit)="save()" [formGroup]="form" class="card p-4 shadow-sm">
     <div class="row g-3">
       <div class="col-md-6">
         <label class="form-label">Full Name</label>
-        <input class="form-control" name="name" [(ngModel)]="model.name" required>
+        <input class="form-control" formControlName="name">
+        <div class="invalid-feedback d-block small" *ngIf="form.get('name')?.touched && form.get('name')?.invalid">Name is required</div>
       </div>
       <div class="col-md-6">
         <label class="form-label">Email</label>
-        <input class="form-control" name="email" type="email" [(ngModel)]="model.email" required>
+        <input class="form-control" formControlName="email" type="email">
+        <div class="invalid-feedback d-block small" *ngIf="form.get('email')?.touched && form.get('email')?.invalid">Valid email required</div>
       </div>
       <div class="col-md-6">
         <label class="form-label">Phone</label>
-        <input class="form-control" name="phone" [(ngModel)]="model.phone">
+        <input class="form-control" formControlName="phone">
       </div>
       <div class="col-md-6">
         <label class="form-label">Position</label>
-        <input class="form-control" name="position" [(ngModel)]="model.position" required>
+        <select class="form-select" formControlName="position">
+          <option value="" disabled>Select...</option>
+          <option *ngFor="let p of positions" [value]="p">{{p}}</option>
+        </select>
+        <div class="invalid-feedback d-block small" *ngIf="form.get('position')?.touched && form.get('position')?.invalid">Required</div>
       </div>
       <div class="col-md-4">
         <label class="form-label">Experience (Years)</label>
-        <input class="form-control" type="number" name="experience" [(ngModel)]="model.experience">
+        <input class="form-control" type="number" formControlName="experience">
       </div>
       <div class="col-md-8">
         <label class="form-label">Resume URL</label>
-        <input class="form-control" name="resumeUrl" [(ngModel)]="model.resumeUrl" placeholder="https://...">
+        <input class="form-control" formControlName="resumeUrl" placeholder="https://...">
       </div>
     </div>
     <div class="mt-4 d-flex gap-2">
-      <button class="btn btn-success" [disabled]="f.invalid">Save Candidate</button>
-      <button class="btn btn-outline-secondary" type="reset" (click)="model={}">Reset</button>
+      <button class="btn btn-success" [disabled]="form.invalid || saving">
+        <span *ngIf="!saving">Save Candidate</span>
+        <span *ngIf="saving" class="spinner-border spinner-border-sm"></span>
+      </button>
+      <button class="btn btn-outline-secondary" type="button" (click)="form.reset()">Reset</button>
     </div>
+    <div *ngIf="saved" class="alert alert-success mt-3 py-2 small">Candidate saved</div>
+    <div *ngIf="error" class="alert alert-danger mt-3 py-2 small">{{error}}</div>
   </form>
 </div>

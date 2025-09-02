@@ -1,7 +1,123 @@
 <div class="container py-4 report-wrapper">
-  <h4 class="mb-3">Consolidated Report</h4>
-  <div class="alert alert-info small">Report generation logic to be implemented.</div>
-  <div class="card p-3 shadow-sm">
-    <p class="text-muted mb-0">Stage summaries will appear here.</p>
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h4 class="mb-0">Consolidated Report</h4>
+    <div class="btn-group btn-group-sm" *ngIf="report">
+      <button class="btn btn-outline-secondary" (click)="exportJSON()"><i class="bi bi-filetype-json me-1"></i>JSON</button>
+      <button class="btn btn-outline-secondary" (click)="print()"><i class="bi bi-printer me-1"></i>Print</button>
+      <button class="btn btn-outline-primary" (click)="load()"><i class="bi bi-arrow-clockwise"></i></button>
+    </div>
   </div>
+  <div *ngIf="loading" class="text-center py-5"><div class="spinner-border"></div></div>
+  <div *ngIf="error" class="alert alert-danger">{{error}}</div>
+  <ng-container *ngIf="!loading && !error && report">
+    <div class="card shadow-sm mb-3">
+      <div class="card-body row g-3 small">
+        <div class="col-md-3">
+          <div class="fw-semibold">Candidate</div>
+          <div class="fs-6">{{report.candidateName}}</div>
+          <div class="text-muted">{{report.position}}</div>
+        </div>
+        <div class="col-md-2">
+          <div class="fw-semibold">Overall Score</div>
+          <div class="fs-5">{{report.overallScore | number:'1.2-2'}}</div>
+          <div class="text-muted">Weighted: {{report.weightedScore | number:'1.2-2'}}</div>
+        </div>
+        <div class="col-md-2">
+          <div class="fw-semibold">Decision</div>
+          <span class="badge text-bg-{{overallStatusClass()}} text-capitalize">{{report.finalDecision}}</span>
+          <div class="text-muted mt-1" style="font-size:.7rem">By {{report.decisionMadeBy}}</div>
+        </div>
+        <div class="col-md-2">
+          <div class="fw-semibold">Interview Time</div>
+          <div>{{report.totalInterviewTime}} mins</div>
+        </div>
+        <div class="col-md-3">
+          <div class="fw-semibold">Summary</div>
+          <div class="text-muted" style="max-height:70px; overflow:auto">{{report.recommendationSummary}}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-3">
+      <div class="col-lg-8">
+        <div class="card shadow-sm h-100">
+          <div class="card-header py-2 small fw-semibold">Stage Status</div>
+          <div class="table-responsive">
+            <table class="table table-sm table-bordered align-middle mb-0 small">
+              <thead class="table-light">
+                <tr>
+                  <th>Stage</th>
+                  <th>Status</th>
+                  <th>Rating</th>
+                  <th>Interviewer</th>
+                  <th>Completed At</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let key of stageKeys()">
+                  <ng-container *ngIf="stageData(key) as data">
+                    <td class="text-capitalize">{{key.replace('-',' ')}}</td>
+                    <td>
+                      <span class="badge" [ngClass]="{
+                        'text-bg-success': data.status==='pass',
+                        'text-bg-danger': data.status==='fail',
+                        'text-bg-secondary': data.status==='pending'
+                      }">{{data.status}}</span>
+                    </td>
+                    <td>{{data.rating || '-'}} </td>
+                    <td>{{data.interviewerName || '-'}}</td>
+                    <td>{{data.completedAt ? (data.completedAt | date:'short') : '-'}}</td>
+                  </ng-container>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="card shadow-sm mb-3">
+          <div class="card-header py-2 small fw-semibold">Key Strengths</div>
+          <div class="card-body small" *ngIf="report.keyStrengths.length; else noStr">
+            <span *ngFor="let s of report.keyStrengths" class="badge text-bg-success-subtle border border-success text-success me-1 mb-1">{{s}}</span>
+          </div>
+          <ng-template #noStr><div class="text-muted small p-2">No strengths captured.</div></ng-template>
+        </div>
+        <div class="card shadow-sm">
+          <div class="card-header py-2 small fw-semibold">Key Weaknesses</div>
+          <div class="card-body small" *ngIf="report.keyWeaknesses.length; else noWeak">
+            <span *ngFor="let w of report.keyWeaknesses" class="badge text-bg-danger-subtle border border-danger text-danger me-1 mb-1">{{w}}</span>
+          </div>
+          <ng-template #noWeak><div class="text-muted small p-2">No weaknesses captured.</div></ng-template>
+        </div>
+      </div>
+    </div>
+
+    <div class="card shadow-sm mt-3">
+      <div class="card-header py-2 small fw-semibold">Detailed Evaluations</div>
+      <div class="table-responsive">
+        <table class="table table-sm small mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Stage</th>
+              <th>Overall</th>
+              <th>Recommendation</th>
+              <th>Strengths</th>
+              <th>Improvements</th>
+              <th>Comments</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let ev of report.evaluations">
+              <td class="text-capitalize">{{ev.stage.replace('-',' ')}}</td>
+              <td>{{ev.overallRating}}</td>
+              <td>{{ev.recommendation}}</td>
+              <td><span *ngFor="let s of ev.strengths" class="badge bg-success-subtle text-success border me-1">{{s}}</span></td>
+              <td><span *ngFor="let a of ev.areasForImprovement" class="badge bg-warning-subtle text-warning border me-1">{{a}}</span></td>
+              <td style="max-width:250px">{{ev.comments}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </ng-container>
 </div>
